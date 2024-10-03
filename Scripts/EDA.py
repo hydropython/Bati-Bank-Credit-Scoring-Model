@@ -6,35 +6,35 @@ import os
 class EDA:
     def __init__(self, file_path):
         self.data = pd.read_csv(file_path)
-        # Ensure the Images directory exists
         os.makedirs('../Images', exist_ok=True)
+        os.makedirs('../Data', exist_ok=True)
 
     def overview_of_data(self):
-        # Overview of the dataset
         print(f"### Overview of Data ###")
         print(f"Number of Rows: {self.data.shape[0]}")
         print(f"Number of Columns: {self.data.shape[1]}")
-        print(self.data.info())
+        print(f"\nData Types:\n{self.data.dtypes}")
+        print(f"\nMissing Values:\n{self.data.isnull().sum()}")
+        
+        return self.data.shape, self.data.dtypes, self.data.isnull().sum()
 
     def summary_statistics(self):
-        # Summary statistics for numerical data
+        numerical_summary = self.data.describe(include=['float64', 'int64'])
         print("### Summary Statistics for Numerical Data ###")
-        num_desc = self.data.describe(include=['float64', 'int64'])
-        print(num_desc)
+        print(numerical_summary)
 
-        # Summary statistics for categorical data
+        categorical_summary = self.data.describe(include=['object'])
         print("\n### Summary Statistics for Categorical Data ###")
-        cat_desc = self.data.describe(include=['object'])
-        print(cat_desc)
+        print(categorical_summary)
+
+        return numerical_summary, categorical_summary
 
     def distribution_of_numerical_features(self):
-        # Visualizing the distribution of numerical features
         numerical_cols = self.data.select_dtypes(include=['float64', 'int64']).columns
+        print(f"Numerical Columns: {numerical_cols}")
+        
         n = len(numerical_cols)
-
-        # Calculate the number of rows needed for the subplots
         rows = (n + 1) // 2
-
         fig, axes = plt.subplots(nrows=rows, ncols=2, figsize=(12, 5 * rows))
         fig.suptitle('Distribution of Numerical Features', fontsize=16)
 
@@ -46,96 +46,123 @@ class EDA:
             axes[row, col_idx].set_ylabel('Frequency', fontsize=12)
             axes[row, col_idx].grid(True)
 
-        # Remove any empty subplots if n is odd
         if n % 2 != 0:
             fig.delaxes(axes[rows - 1, 1])
 
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
         plt.savefig('../Images/distribution_of_numerical_features.png')
-        plt.show()  # Show the plot in the notebook
+        plt.show()
         plt.close(fig)
 
     def distribution_of_categorical_features(self):
-        # Visualizing the distribution of categorical features
-        categorical_cols = self.data.select_dtypes(include=['object']).columns
-        n = len(categorical_cols)
-
-        # Calculate the number of rows needed for the subplots
-        rows = (n + 1) // 2
-
-        fig, axes = plt.subplots(nrows=rows, ncols=2, figsize=(12, 5 * rows))
-        fig.suptitle('Distribution of Categorical Features', fontsize=16)
-
-        for i, col in enumerate(categorical_cols):
-            row, col_idx = divmod(i, 2)
-            sns.countplot(x=col, data=self.data, ax=axes[row, col_idx], palette='viridis')
-            axes[row, col_idx].set_title(f'Distribution of {col}', fontsize=14)
-            axes[row, col_idx].set_xlabel(col, fontsize=12)
-            axes[row, col_idx].set_ylabel('Count', fontsize=12)
-            axes[row, col_idx].grid(True)
-
-        # Remove any empty subplots if n is odd
-        if n % 2 != 0:
-            fig.delaxes(axes[rows - 1, 1])
-
-        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-        plt.savefig('../Images/distribution_of_categorical_features.png')
-        plt.show()  # Show the plot in the notebook
-        plt.close(fig)
+        meaningful_categorical_cols = ['CurrencyCode', 'ProductCategory', 'ChannelId']
+        
+        for col in meaningful_categorical_cols:
+            plt.figure(figsize=(10, 6))
+            sns.countplot(data=self.data, x=col, palette='pastel')
+            plt.title(f'Distribution of {col}', fontsize=16)
+            plt.xlabel(col, fontsize=12)
+            plt.ylabel('Count', fontsize=12)
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            plt.savefig(f"../Images/distribution_of_{col}.png")
+            plt.show()
 
     def correlation_analysis(self):
-        # Correlation analysis between numerical features
-        correlation_matrix = self.data.corr()
+        numeric_data = self.data.select_dtypes(include=['float64', 'int64'])
+        
+        correlation_matrix = numeric_data.corr()
+        
+        means = numeric_data.mean()
+        stds = numeric_data.std()
+        counts = numeric_data.count()
+
+        print("### Correlation Analysis ###")
+        print("\nCorrelation Matrix:")
+        print(correlation_matrix)
+        
+        print("\nMeans:")
+        print(means)
+        
+        print("\nStandard Deviations:")
+        print(stds)
+        
+        print("\nCounts of Non-NA Values:")
+        print(counts)
 
         plt.figure(figsize=(10, 8))
-        sns.heatmap(correlation_matrix, annot=True, fmt=".2f", cmap='coolwarm', square=True)
+        sns.heatmap(correlation_matrix, 
+                    annot=True, 
+                    fmt=".2f", 
+                    cmap='Blues', 
+                    square=True, 
+                    cbar_kws={"shrink": .8}, 
+                    linewidths=.5, 
+                    linecolor='black')
+        
         plt.title('Correlation Heatmap', fontsize=16)
-        plt.grid(True)
-        plt.savefig('../Images/correlation_heatmap.png')
-        plt.show()  # Show the plot in the notebook
-        plt.close()
+        plt.xticks(rotation=45, ha='right')
+        plt.yticks(rotation=0)
+        plt.tight_layout()
+        
+        plt.savefig('../Images/correlation_heatmap_matplotlib.png')
+        plt.show()
+        
+        return correlation_matrix, means, stds, counts
 
     def identify_missing_values(self):
-        # Identify missing values
         missing_values = self.data.isnull().sum()
         missing_values = missing_values[missing_values > 0]
 
         if len(missing_values) > 0:
-            print("\n### Missing Values by Feature ###")
-            print(missing_values)
-
             plt.figure(figsize=(10, 6))
-            sns.barplot(x=missing_values.index, y=missing_values.values, palette='Set2')
-            plt.title('Missing Values by Feature', fontsize=16)
-            plt.ylabel('Number of Missing Values', fontsize=12)
-            plt.xlabel('Features', fontsize=12)
-            plt.grid(True)
-            plt.savefig('../Images/missing_values.png')
-            plt.show()  # Show the plot in the notebook
-            plt.close()
+            sns.barplot(x=missing_values.index, y=missing_values.values, palette='pastel')
+            plt.title('Missing Values Count per Column', fontsize=16)
+            plt.xlabel('Columns', fontsize=12)
+            plt.ylabel('Count of Missing Values', fontsize=12)
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            plt.savefig('../Images/missing_values_count.png')
+            plt.show()
         else:
             print("No missing values in the dataset.")
 
-    def outlier_detection(self):
-        # Use box plots to identify outliers
+    def detect_outliers(self, method='IQR'):
         numerical_cols = self.data.select_dtypes(include=['float64', 'int64']).columns
-        n = len(numerical_cols)
+        outliers_dict = {}
 
-        rows = (n + 1) // 2
+        for col in numerical_cols:
+            if method == 'IQR':
+                Q1 = self.data[col].quantile(0.25)
+                Q3 = self.data[col].quantile(0.75)
+                IQR = Q3 - Q1
+                lower_bound = Q1 - 1.5 * IQR
+                upper_bound = Q3 + 1.5 * IQR
+                outliers = self.data[(self.data[col] < lower_bound) | (self.data[col] > upper_bound)]
+                outliers_dict[col] = outliers
+                print(f"{len(outliers)} outliers detected in {col} using IQR method.")
+        
+        return outliers_dict
 
-        fig, axes = plt.subplots(nrows=rows, ncols=2, figsize=(12, 5 * rows))
-        fig.suptitle('Outlier Detection with Box Plots', fontsize=16)
+    def handle_outliers(self, method='remove'):
+        if method not in ['remove', 'replace']:
+            raise ValueError("Method must be 'remove' or 'replace'.")
 
-        for i, col in enumerate(numerical_cols):
-            row, col_idx = divmod(i, 2)
-            sns.boxplot(y=self.data[col], ax=axes[row, col_idx], palette='pastel')
-            axes[row, col_idx].set_title(f'Box Plot of {col}', fontsize=14)
-            axes[row, col_idx].grid(True)
-
-        if n % 2 != 0:
-            fig.delaxes(axes[rows - 1, 1])
-
-        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-        plt.savefig('../Images/outlier_detection.png')
-        plt.show()  # Show the plot in the notebook
-        plt.close(fig)
+        numerical_cols = self.data.select_dtypes(include=['float64', 'int64']).columns
+        
+        for col in numerical_cols:
+            Q1 = self.data[col].quantile(0.25)
+            Q3 = self.data[col].quantile(0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - 1.5 * IQR
+            upper_bound = Q3 + 1.5 * IQR
+            
+            if method == 'remove':
+                initial_count = self.data.shape[0]
+                self.data = self.data[(self.data[col] >= lower_bound) & (self.data[col] <= upper_bound)]
+                final_count = self.data.shape[0]
+                print(f"Removed {initial_count - final_count} outliers from {col}.")
+            elif method == 'replace':
+                self.data[col] = self.data[col].mask(self.data[col] < lower_bound, lower_bound)
+                self.data[col] = self.data[col].mask(self.data[col] > upper_bound, upper_bound)
+                print(f"Replaced outliers in {col} with bounds.")
