@@ -166,3 +166,8 @@ class EDA:
                 self.data[col] = self.data[col].mask(self.data[col] < lower_bound, lower_bound)
                 self.data[col] = self.data[col].mask(self.data[col] > upper_bound, upper_bound)
                 print(f"Replaced outliers in {col} with bounds.")
+
+        # Save cleaned data
+        cleaned_file_path = '../Data/cleaned_data.csv'
+        self.data.to_csv(cleaned_file_path, index=False)
+        print(f"Cleaned data saved to {cleaned_file_path}.")
