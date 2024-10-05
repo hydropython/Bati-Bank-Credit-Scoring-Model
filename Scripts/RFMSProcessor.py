@@ -116,3 +116,11 @@ class RFMSProcessor:
         plt.ylabel('Number of Users', fontsize=14)
         plt.grid(linestyle='--', linewidth=0.5)
         plt.show()
+    
+    def save_rfms_to_csv(self, file_path):
+        """Save the RFMS DataFrame to a CSV file."""
+        if self.rfms_df is None:
+            raise ValueError("RFMS scores have not been calculated. Please run calculate_rfms() first.")
+        
+        self.rfms_df.to_csv(file_path, index=False)
+        print(f"RFMS DataFrame successfully saved to {file_path}")
