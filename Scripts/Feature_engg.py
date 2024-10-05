@@ -1,22 +1,10 @@
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler, StandardScaler
 
 class TransactionProcessor:
     def __init__(self, df):
-        """
-        Initialize the TransactionProcessor class with a DataFrame.
-        """
         self.df = df
-
-    def convert_data_types(self):
-        """
-        Ensure the necessary columns are converted to numeric data types.
-        This will help avoid errors during aggregate functions or scaling.
-        """
-        # Convert 'Amount' and 'Value' to numeric, coerce errors to NaN
-        self.df['Amount'] = pd.to_numeric(self.df['Amount'], errors='coerce')
-        self.df['Value'] = pd.to_numeric(self.df['Value'], errors='coerce')
-
+    
     def aggregate_features(self):
         """
         Create aggregate features for each customer:
@@ -25,6 +13,7 @@ class TransactionProcessor:
         - Transaction Count
         - Standard Deviation of Transaction Amounts
         """
+        print("\nAggregating features per customer...")
         agg_features = self.df.groupby('CustomerId').agg(
             total_transaction_amount=('Amount', 'sum'),
             average_transaction_amount=('Amount', 'mean'),
@@ -34,7 +23,7 @@ class TransactionProcessor:
 
         # Merge aggregate features back into the original dataframe
         self.df = pd.merge(self.df, agg_features, on='CustomerId', how='left')
-
+        print("Data after aggregation:\n", self.df.head())
         return self.df
 
     def extract_time_features(self):
@@ -45,86 +34,75 @@ class TransactionProcessor:
         - Transaction Month
         - Transaction Year
         """
+        print("\nExtracting time features...")
         self.df['TransactionStartTime'] = pd.to_datetime(self.df['TransactionStartTime'])
         self.df['transaction_hour'] = self.df['TransactionStartTime'].dt.hour
         self.df['transaction_day'] = self.df['TransactionStartTime'].dt.day
         self.df['transaction_month'] = self.df['TransactionStartTime'].dt.month
         self.df['transaction_year'] = self.df['TransactionStartTime'].dt.year
-
+        
+        print("Data after extracting time features:\n", self.df.head())
         return self.df
 
-    def encode_categorical_variables(self, label_encode_cols=None, one_hot_encode_cols=None):
+    def encode_categorical_columns(self):
         """
-        Encode categorical variables:
-        - Label Encoding: Assign unique integer values to categories.
-        - One-Hot Encoding: Convert categorical values into binary vectors.
+        Encode categorical variables using Label Encoding.
         """
-        # Label encoding for specified columns
-        if label_encode_cols:
-            label_encoder = LabelEncoder()
-            for col in label_encode_cols:
+        print("\nEncoding categorical columns...")
+        # Define categorical columns to encode
+        categorical_columns = ['CurrencyCode', 'ProviderId', 'ProductId', 'ProductCategory', 
+                            'ChannelId', 'PricingStrategy']  # Included PricingStrategy
+
+        # Apply label encoding to each categorical column
+        label_encoder = LabelEncoder()
+        for col in categorical_columns:
+            if self.df[col].dtype == 'object' or self.df[col].dtype == 'category':  # Check if it's categorical
                 self.df[col] = label_encoder.fit_transform(self.df[col])
 
-        # One-Hot encoding for specified columns
-        if one_hot_encode_cols:
-            self.df = pd.get_dummies(self.df, columns=one_hot_encode_cols)
-
+        print("Data after encoding categorical columns:\n", self.df[categorical_columns].head())
         return self.df
 
-  
+    def handle_missing_values(self):
+        """
+        Handle missing values using imputation or removal.
+        """
+        print("\nHandling missing values...")
+        # Imputation: Filling missing values with mean for numerical features
+        for col in self.df.select_dtypes(include=['float64', 'int64']).columns:
+            self.df[col].fillna(self.df[col].mean(), inplace=True)
+        
+        print("Data after handling missing values:\n", self.df.head())
+        return self.df
 
-    def scale_numerical_features(self, columns, method='normalize'):
+    def normalize_or_standardize(self, method='normalize'):
         """
-        Scale numerical features using:
-        - Normalization: Scale to [0, 1].
-        - Standardization: Scale to mean 0 and standard deviation 1.
+        Normalize or standardize numerical features:
+        - Normalization: Scales the data to a range of [0, 1].
+        - Standardization: Scales the data to have a mean of 0 and a standard deviation of 1.
         """
+        print(f"\nApplying {method} to numerical columns...")
+        
+        # Define numerical columns to scale
+        numerical_columns = ['Amount', 'Value', 'total_transaction_amount', 
+                             'average_transaction_amount', 'transaction_count', 
+                             'std_transaction_amount']
+
         if method == 'normalize':
             scaler = MinMaxScaler()
         elif method == 'standardize':
             scaler = StandardScaler()
+        else:
+            raise ValueError("Method must be 'normalize' or 'standardize'")
+        
+        # Apply the scaler
+        self.df[numerical_columns] = scaler.fit_transform(self.df[numerical_columns])
 
-        self.df[columns] = scaler.fit_transform(self.df[columns])
-
+        print(f"Data after {method}:\n", self.df[numerical_columns].head())
         return self.df
-
-    def process_data(self):
+    
+    def save_final_dataframe(self, filename='final.csv'):
         """
-        Main function to process the data in sequence:
-        1. Convert data types
-        2. Aggregate features
-        3. Extract time features
-        4. Encode categorical variables
-        5. Handle missing values
-        6. Normalize/Standardize numerical features
-        7. Add all new features to the final DataFrame
+        Save the final DataFrame to a CSV file.
         """
-        # Step 1: Convert Data Types
-        self.convert_data_types()
-
-        # Step 2: Aggregate Features
-        self.df = self.aggregate_features()
-
-        # Step 3: Extract Time Features
-        self.df = self.extract_time_features()
-
-        # Step 4: Encode Categorical Variables
-        self.df = self.encode_categorical_variables(
-            label_encode_cols=['ProductCategory'],
-            one_hot_encode_cols=['CurrencyCode']
-        )
-
-        # Step 5: Handle Missing Values
-        #self.df = self.handle_missing_values(method='impute', strategy='mean')
-
-        # Step 6: Scale Numerical Features
-        self.df = self.scale_numerical_features(columns=['Amount', 'Value'], method='standardize')
-
-        return self.df
-
-    def save_cleaned_data(self, file_path):
-        """
-        Save the processed data back to a CSV file.
-        """
-        self.df.to_csv(file_path, index=False)
-        print(f"Cleaned data saved to {file_path}")
+        self.df.to_csv(filename, index=False)
+        print(f"Final DataFrame saved to {filename}.")
