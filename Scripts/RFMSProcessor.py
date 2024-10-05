@@ -89,16 +89,20 @@ class RFMSProcessor:
         """Classify users as 'Good' or 'Bad' based on Recency and Monetary metrics."""
         conditions = [
             (self.rfms_df['Recency'] <= recency_threshold) & (self.rfms_df['Monetary'] >= monetary_threshold),  # Good
-            (self.rfms_df['Recency'] > recency_threshold) & (self.rfms_df['Monetary'] < monetary_threshold),  # Bad
+            (self.rfms_df['Recency'] > recency_threshold) | (self.rfms_df['Monetary'] < monetary_threshold),  # Bad
         ]
         
         labels = ['Good', 'Bad']
         
         # Assign labels based on conditions
-        self.rfms_df['UserLabel'] = np.select(conditions, labels, default='Neutral')  # Default can be 'Neutral'
+        self.rfms_df['UserLabel'] = np.select(conditions, labels, default='Bad')  # Default to 'Bad' if no condition is met
         
+        # Display the classification results
         print("User labeling completed.")
         print(self.rfms_df[['CustomerId', 'Recency', 'Monetary', 'UserLabel']].head())
+        
+        # Display the label distribution
+        print("\nUser Label Distribution:\n", self.rfms_df['UserLabel'].value_counts())
                         
     def visualize_user_labels(self):
         """Visualize the distribution of user labels."""
