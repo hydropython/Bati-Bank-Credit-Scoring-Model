@@ -2,7 +2,7 @@
 # Bati-Bank-Credit-Scoring-Model
 This repository contains a Credit Scoring Model for Bati Bank's collaboration with an eCommerce company to enable a Buy-Now-Pay-Later service. The model assesses creditworthiness and predicts customer default risk, following Basel II Capital Accord guidelines to support informed credit decisions and minimize risk.
 
-**Repository Structure
+Repository Structure
 ---
 
 Scripts:
@@ -28,7 +28,7 @@ rfmswoeprocesser.ipynb: Shows the process of WOE encoding and Information Value 
 model.ipynb: Walkthrough of the model development process, including model evaluation and hyperparameter tuning.
 
 
-**How to Use
+How to Use
 ---
 
 Running the Python Scripts
@@ -64,6 +64,6 @@ The rfmswoeprocesser.py applies Weight of Evidence (WOE) encoding to the RFM seg
 Model Development:
 The model.py script builds machine learning models using techniques like logistic regression, decision trees, or other classifiers. The models are evaluated based on key performance metrics such as accuracy, precision, recall, and ROC-AUC.
 
-**Conclusion
+Conclusion
 ---
 This repository provides a complete framework for customer segmentation and predictive modeling using Python. Each step, from data analysis to feature engineering and modeling, is covered by well-structured scripts and notebooks. The project can be easily extended to handle additional datasets or customized for specific business needs.
