@@ -6,26 +6,33 @@ Repository Structure
 ---
 
 Scripts:
+---
 The primary analysis and modeling steps are provided as Python scripts:
 
-eda.py: Script for performing exploratory data analysis on the dataset.
-feature_engineering.py: Script to engineer and transform features for better model performance.
-rfmsprocesser.py: Script for RFM (Recency, Frequency, Monetary) analysis and customer segmentation.
-rfmswoeprocesser.py: Script for applying Weight of Evidence (WOE) transformation to RFM segments.
-model.py: Script for building and evaluating machine learning models.
-Notebooks:
+*eda.py: Script for performing exploratory data analysis on the dataset.
+
+*feature_engineering.py: Script to engineer and transform features for better model performance.
+
+*rfmsprocesser.py: Script for RFM (Recency, Frequency, Monetary) analysis and customer segmentation.
+
+*rfmswoeprocesser.py: Script for applying Weight of Evidence (WOE) transformation to RFM segments.
+
+*model.py: Script for building and evaluating machine learning models.
+
+Notebooks
+---
+
 The notebook folder contains Jupyter notebooks that complement the scripts by providing:
 
-Detailed step-by-step explanations.
-Visualizations of the results.
-Interactive code examples.
-Notebooks in this folder include:
+*eda.ipynb: A more detailed, interactive version of the EDA process.
 
-eda.ipynb: A more detailed, interactive version of the EDA process.
-feature_engineering.ipynb: Demonstrates feature engineering techniques interactively.
-rfmsprocesser.ipynb: Explores the RFM segmentation results in an interactive format.
-rfmswoeprocesser.ipynb: Shows the process of WOE encoding and Information Value calculations.
-model.ipynb: Walkthrough of the model development process, including model evaluation and hyperparameter tuning.
+*feature_engineering.ipynb: Demonstrates feature engineering techniques interactively.
+
+*rfmsprocesser.ipynb: Explores the RFM segmentation results in an interactive format.
+
+*rfmswoeprocesser.ipynb: Shows the process of WOE encoding and Information Value calculations.
+
+*model.ipynb: Walkthrough of the model development process, including model evaluation and hyperparameter tuning.
 
 
 How to Use
