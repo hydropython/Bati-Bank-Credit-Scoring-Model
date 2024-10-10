@@ -44,10 +44,12 @@ git clone https://github.com/yourusername/your-repo-name.git
 
 
 2. Install the required libraries:
+   
 pip install -r requirements.txt
 
 
 3. Run each script in sequence as per the project requirement:
+   
 python eda.py
 python feature_engineering.py
 python rfmsprocesser.py
